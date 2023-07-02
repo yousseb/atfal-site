@@ -36,22 +36,22 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
 INSTALLED_APPS = [
+    'django.contrib.contenttypes',
     'grappelli',
+    'constance',
     'django.contrib.admin',
     'django.contrib.auth',
-    'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "corsheaders",
     'rest_framework',
-    #'django_admin_commands',
+    # 'django_admin_commands',
     'import_export',
     'reunite'
 ]
@@ -89,7 +89,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'atfalsite.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
@@ -100,7 +99,6 @@ DATABASES = {
     #     'NAME': BASE_DIR / 'db.sqlite3',
     # }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -155,8 +153,23 @@ CACHES = {
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
+CONSTANCE_CONFIG = {
+    'APIFY_API_KEY': ('', _('APIFY API Key for loading Facebook posts'), str),
+}
+CONSTANCE_CONFIG_FIELDSETS = (
+    (
+        _('General Options'),
+        {
+            'fields': ('APIFY_API_KEY',),
+            'collapse': False,
+        },
+    ),
+)

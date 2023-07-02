@@ -4,6 +4,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from pathlib import Path
 from urllib.parse import urlparse, unquote, urlsplit
+from django.utils.safestring import mark_safe
 
 
 class Case(models.Model):
@@ -70,6 +71,12 @@ class CasePost(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     case = models.ForeignKey('Case', on_delete=models.CASCADE)
     post = models.ForeignKey('FacebookPost', on_delete=models.CASCADE)
+
+    def post_preview(self):
+        if self.post:
+            return mark_safe('<p>{0}</p>'.format(self.post__post_text))
+        else:
+            return '(No image)'
 
     def __str__(self):
         return "{}_{}".format(self.case.__str__(), self.post.__str__())

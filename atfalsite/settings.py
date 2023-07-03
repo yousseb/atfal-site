@@ -148,9 +148,19 @@ USE_I18N = True
 
 USE_TZ = True
 
+memcached_cache = env.cache(backend='django.core.cache.backends.memcached.PyMemcacheCache')
+memcached_cache['OPTIONS'] = {
+    "MAX_ENTRIES": 1000,
+    "binary": True,
+    "no_delay": True,
+    "ignore_exc": True,
+    "max_pool_size": 4,
+    "use_pooling": True,
+    }
+
 CACHES = {
     # The cache() method is an alias for cache_url().
-    "default": env.cache(backend='django.core.cache.backends.memcached.PyMemcacheCache')
+    "default": memcached_cache
 }
 
 # Static files (CSS, JavaScript, Images)

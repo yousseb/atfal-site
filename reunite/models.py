@@ -1,10 +1,17 @@
 import uuid
 from django.db import models
 from django.urls import reverse
+from django.utils.html import format_html, escape
 from django.utils.translation import gettext_lazy as _
 from pathlib import Path
 from urllib.parse import urlparse, unquote, urlsplit
 from django.utils.safestring import mark_safe
+from django.shortcuts import resolve_url
+from django.contrib.admin.templatetags.admin_urls import admin_urlname
+
+from storages.backends.s3boto3 import S3Boto3Storage
+storage = S3Boto3Storage()
+storage.bucket_name = 'fb'
 
 
 class Case(models.Model):
@@ -17,7 +24,7 @@ class Case(models.Model):
     description = models.TextField(db_comment='Facebook post text', null=True, help_text=_('Facebook post text'))
 
     class CaseStatus(models.IntegerChoices):
-        UNKNOWN = 0, _('Unknown')
+        UNKNOWN = 0, _('Unclassified')
         MISSING = 1, _('Missing')
         JOHN_DOE = 2, _('John Doe')
         REUNITED = 3, _('Reunited')
@@ -33,6 +40,17 @@ class Case(models.Model):
         through="CasePost",
         through_fields=("case", "post"),
     )
+
+    def fb_posts(self):
+        i = 1
+        posts = []
+        for post in self.posts.all():
+            url = resolve_url(admin_urlname(FacebookPost._meta, 'change'), post.id)
+            link = f'<a href="{url}"> <i class="fas fa-clipboard"></i> </a>'
+            posts.append(link)
+            i = i + 1
+        return format_html(','.join(posts))
+    fb_posts.short_description = 'Posts'
 
     @staticmethod
     def autocomplete_search_fields():
@@ -74,9 +92,11 @@ class CasePost(models.Model):
 
     def post_preview(self):
         if self.post:
-            return mark_safe('<p>{0}</p>'.format(self.post__post_text))
+            text = self.post.post_text
+            text = text.replace('\n', '<br/>')
+            return format_html('<p dir="rtl" style="direction: rtl; text-align: right; word-break: break-all; white-space: normal;">{0}</p>'.format(text))
         else:
-            return '(No image)'
+            return '(No post)'
 
     def __str__(self):
         return "{}_{}".format(self.case.__str__(), self.post.__str__())
@@ -101,6 +121,19 @@ class FacebookPhoto(models.Model):
         cleaned_image = unquote(Path(url_parsed.path).name)
         return cleaned_image
         # cleaned_image = cleaned_image.split("?")[0]
+
+    def photo_preview(self):
+        print(self.photo_file_name())
+        file_path_within_bucket = f'{self.photo_file_name()}'
+        #if storage.exists(file_path_within_bucket):
+        url = storage.url(file_path_within_bucket)
+        #print(url)
+        # TODO: Put error image
+        return format_html(f'<img onerror="this.src=\'/images/image.png\'" src="{url}" />')
+        #else:
+        #    return '-'
+    photo_preview.short_description = 'Photo'
+    photo_preview.allow_tags = True
 
     def __str__(self):
         return "{}".format(self.media_id)

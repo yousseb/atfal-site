@@ -92,8 +92,12 @@ WSGI_APPLICATION = 'atfalsite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+database = env.db()
+database['CONN_MAX_AGE'] = None
+database['CONN_HEALTH_CHECKS'] = True
+
 DATABASES = {
-    'default': env.db(),
+    'default': database,
     # 'default': {
     #     'ENGINE': 'django.db.backends.sqlite3',
     #     'NAME': BASE_DIR / 'db.sqlite3',

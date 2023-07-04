@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django import forms
 from django.db import models
+from django.forms import Widget
 from django.utils.safestring import mark_safe
 from import_export.admin import ImportExportModelAdmin
 from related_admin import RelatedFieldAdmin
@@ -29,7 +30,7 @@ class FacebookPostInlineAdmin(admin.TabularInline):
     verbose_name = _('Facebook Post')
     verbose_name_plural = _('Facebook Posts')
     fields = ['post', 'case', 'post_preview']
-    readonly_fields = ['post_preview',]
+    readonly_fields = ['post_preview', ]
 
 
 @admin.register(Case)
@@ -64,13 +65,17 @@ class FacebookPostAdmin(ImportExportModelAdmin):
         return obj.post_time.strftime('%d/%m/%Y %H:%m')
 
     admin_post_time.admin_order_field = 'post_time'
+
     @admin.display(description='Post')
     def admin_post_text(self, obj):
         text = obj.post_text
         text = text.replace('\n', '<br/>')
-        return mark_safe('<p dir="rtl" style="direction: rtl; text-align: right; word-break: break-all; white-space: normal;">{0}</p>'.format(text))
+        return mark_safe(
+            '<p dir="rtl" style="direction: rtl; text-align: right; word-break: break-all; white-space: normal;">{0}</p>'.format(
+                text))
 
     list_display = ['case_code', 'admin_post_time', 'admin_post_text', ]
+    list_per_page = 20
     search_fields = ['case_code', 'post_id', 'post_text']
     readonly_fields = ['post_text', 'post_url', 'case_code', 'post_id', 'post_time', 'facebook_id', ]
     widgets = {'post_text': forms.Textarea(attrs={'dir': 'rtl', 'readonly': 'readonly'})}
@@ -94,18 +99,36 @@ class FacebookPostAdmin(ImportExportModelAdmin):
 
 # ---------------------- Facebook Photo
 
+class ImagePreviewWidget(forms.widgets.FileInput):
+    def render(self, name, value, attrs=None, **kwargs):
+        input_html = super().render(name, value, attrs=None, **kwargs)
+        if value:
+            no_image_url = f'https://reunite-media.fra1.digitaloceanspaces.com/original/nophoto.jpg'
+
+            img_html = mark_safe(
+                f'<br><img onerror="this.src=\'{no_image_url}\'" src="{value}" width="200" />')
+            return f'{img_html}'
+        return input_html
+
+
 class FacebookPhotoAdminForm(forms.ModelForm):
     file_name = forms.CharField(disabled=True,
                                 widget=forms.TextInput(attrs={'size': 60}))
 
+    preview = forms.Field(widget=ImagePreviewWidget)
+
     class Meta:
         model = FacebookPhoto
-        fields = ['post', 'url', 'media_id', 'ocr_text', 'file_name']
+        fields = ['post', 'url', 'media_id', 'ocr_text', 'file_name', 'preview']
 
     def get_initial_for_field(self, field, field_name):
         if field_name == 'file_name':
             if self.instance:
                 return self.instance.photo_file_name()
+            return None
+        if field_name == 'preview':
+            if self.instance:
+                return self.instance.preview_url()
             return None
         return super().get_initial_for_field(field, field_name)
 
@@ -114,9 +137,13 @@ class FacebookPhotoAdminForm(forms.ModelForm):
 class FacebookPhotoAdmin(ImportExportModelAdmin):
     form = FacebookPhotoAdminForm
     list_display = ['post', 'url', 'photo_preview']
-    search_fields = ['post']
+    list_per_page = 20
+    search_fields = ['photo_image_url', 'url']
+
+    # def has_change_permission(self, request, obj=None):
+    #     return False
+
     formfield_overrides = {
         models.CharField: {'widget': forms.TextInput(attrs={'size': '60'})},
     }
     # https://stackoverflow.com/a/68850860
-

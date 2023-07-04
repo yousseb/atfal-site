@@ -9,6 +9,10 @@ import re
 from apify_client import ApifyClient
 from apify.log import ActorLogFormatter
 from reunite.models import FacebookPhoto, FacebookPost, Case
+from storages.backends.s3boto3 import S3Boto3Storage
+import requests
+
+storage = S3Boto3Storage()
 
 
 log.basicConfig(format='[ %(levelname)s ] %(message)s', level=log.DEBUG, stream=sys.stdout)
@@ -61,7 +65,7 @@ class ApifyPageImporter:
         # Prepare the Actor input
         run_input = {
             "startUrls": [{"url": url}],
-            "resultsLimit": 1,
+            "resultsLimit": 5000,
             "proxy": {
                 "useApifyProxy": True,
                 "apifyProxyGroups": ["RESIDENTIAL"],
@@ -145,6 +149,24 @@ class ApifyPageImporter:
                     photo.post = post
                     photo.save()
                     self.photos_imported = self.photos_imported + 1
+
+                    file_name = photo.photo_file_name()
+                    file_name_in_bucket = f'original/{file_name}'
+                    if not storage.exists(file_name_in_bucket):
+                        for _ in range(3):
+                            try:
+                                response = requests.get(photo.photo_image_url)
+                                if response.status_code in [200, 404]:
+                                    break
+                            except requests.exceptions.ConnectionError:
+                                pass
+
+                        if response is not None and response.status_code == 200:
+                            # Default ACL is private
+                            file = storage.open(file_name_in_bucket, 'w')
+                            file.write(response.content)
+                            file.close()
+
                 except Exception as ex:
                     log.exception(ex)
 

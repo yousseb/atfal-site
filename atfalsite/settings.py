@@ -391,8 +391,10 @@ JAZZMIN_SETTINGS["show_ui_builder"] = False
 
 STORAGE_CONF = env.dict('STORAGE_CONF')
 AWS_S3_REGION_NAME = STORAGE_CONF['AWS_S3_REGION_NAME']
-BUCKET_NAME = STORAGE_CONF['BUCKET_NAME']
-AWS_S3_ENDPOINT_URL = f'https://{BUCKET_NAME}.{AWS_S3_REGION_NAME}.digitaloceanspaces.com'
+# https://docs.aws.amazon.com/cli/latest/topic/s3-config.html#addressing-style
+AWS_S3_ADDRESSING_STYLE = 'virtual'     # DigitalOcean addressing style
+AWS_STORAGE_BUCKET_NAME = STORAGE_CONF['BUCKET_NAME']
+AWS_S3_ENDPOINT_URL = f'https://{AWS_S3_REGION_NAME}.digitaloceanspaces.com'
 AWS_ACCESS_KEY_ID = STORAGE_CONF['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = STORAGE_CONF['AWS_SECRET_ACCESS_KEY']
 

@@ -8,10 +8,8 @@ from urllib.parse import urlparse, unquote, urlsplit
 from django.utils.safestring import mark_safe
 from django.shortcuts import resolve_url
 from django.contrib.admin.templatetags.admin_urls import admin_urlname
-
 from storages.backends.s3boto3 import S3Boto3Storage
 storage = S3Boto3Storage()
-storage.bucket_name = 'fb'
 
 
 class Case(models.Model):
@@ -119,20 +117,26 @@ class FacebookPhoto(models.Model):
     def photo_file_name(self):
         url_parsed = urlparse(self.photo_image_url)
         cleaned_image = unquote(Path(url_parsed.path).name)
-        return cleaned_image
+        return format_html(cleaned_image)
         # cleaned_image = cleaned_image.split("?")[0]
+    photo_file_name.short_description = _('File name')
+
+    def preview_url(self):
+        file_path_within_bucket = f'original/{self.photo_file_name()}'
+        url = storage.url(file_path_within_bucket)
+        return url
 
     def photo_preview(self):
-        print(self.photo_file_name())
-        file_path_within_bucket = f'{self.photo_file_name()}'
+        file_path_within_bucket = f'original/{self.photo_file_name()}'
+        no_image_url = f'https://reunite-media.fra1.digitaloceanspaces.com/original/nophoto.jpg'
         #if storage.exists(file_path_within_bucket):
         url = storage.url(file_path_within_bucket)
         #print(url)
         # TODO: Put error image
-        return format_html(f'<img onerror="this.src=\'/images/image.png\'" src="{url}" />')
+        return format_html(f'<img onerror="this.src=\'{no_image_url}\'" src="{url}" />')
         #else:
         #    return '-'
-    photo_preview.short_description = 'Photo'
+    photo_preview.short_description = _('Photo')
     photo_preview.allow_tags = True
 
     def __str__(self):

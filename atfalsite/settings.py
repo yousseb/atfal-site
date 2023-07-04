@@ -42,10 +42,10 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.contenttypes',
+    'constance',
     'jazzmin',
     'django.contrib.admin',
     'related_admin',
-    'constance',
     'django.contrib.auth',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -54,7 +54,10 @@ INSTALLED_APPS = [
     'rest_framework',
     # 'django_admin_commands',
     'import_export',
-    'reunite'
+    'reunite',
+    'constance.backends.database',
+    'django_celery_beat',
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -177,8 +180,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 CONSTANCE_CONFIG = {
-    'APIFY_API_KEY': ('', _('APIFY API Key for loading Facebook posts'), str),
+    'APIFY_API_KEY': ('', _('APIFY API Key'), str),
 }
+CONSTANCE_IGNORE_ADMIN_VERSION_CHECK = True
 CONSTANCE_CONFIG_FIELDSETS = (
     (
         _('General Options'),
@@ -188,6 +192,9 @@ CONSTANCE_CONFIG_FIELDSETS = (
         },
     ),
 )
+CONSTANCE_DATABASE_PREFIX = 'constance:atfalsite:'
+#CONSTANCE_DATABASE_CACHE_BACKEND = 'default'
+
 
 JAZZMIN_SETTINGS = {
     # title of the window (Will default to current_admin_site.site_title if absent or None)
@@ -295,8 +302,19 @@ JAZZMIN_SETTINGS = {
         "reunite.Case": "far fa-id-card",
         "reunite.FacebookPost": "fab fa-facebook",
         "reunite.FacebookPhoto": "far fa-image",
-        "constance.Config": "fas fa-cogs"
+        "constance.Config": "fas fa-cogs",
+        "django_celery_beat.ClockedSchedule": "fas fa-clock",
+        "django_celery_beat.IntervalSchedule": "fas fa-stopwatch",
+        "django_celery_beat.CrontabSchedule": "fas fa-redo",
+        "django_celery_beat.SolarSchedule": "fas fa-sun",
+        "django_celery_beat.PeriodicTask": "fas fa-calendar-alt",
+        "django_celery_results.TaskResult": "fas fa-tasks",
+        "django_celery_results.GroupResult": "fas fa-layer-group",
+
     },
+    #     'django_celery_beat',
+    #     'django_celery_results',
+
     # Icons that are used when one is not manually specified
     "default_icon_parents": "fas fa-chevron-circle-right",
     "default_icon_children": "fas fa-circle",
@@ -305,7 +323,7 @@ JAZZMIN_SETTINGS = {
     # Related Modal #
     #################
     # Use modals instead of popups
-    "related_modal_active": True,
+    "related_modal_active": False,
 
     #############
     # UI Tweaks #
@@ -378,4 +396,16 @@ AWS_S3_ENDPOINT_URL = f'https://{BUCKET_NAME}.{AWS_S3_REGION_NAME}.digitaloceans
 AWS_ACCESS_KEY_ID = STORAGE_CONF['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = STORAGE_CONF['AWS_SECRET_ACCESS_KEY']
 
-print(AWS_S3_ENDPOINT_URL)
+# Celery & Celery Beat
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_CACHE_BACKEND = 'default'
+CELERY_QUEUES = {
+    "tasks": {"exchange": "tasks"},
+    "feeds": {"exchange": "feeds"},
+}
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+

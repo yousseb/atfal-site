@@ -138,3 +138,12 @@ GitHub.sublime-settings
 !.vscode/launch.json
 !.vscode/extensions.json
 .history
+
+
+.mypy_cache
+.dmypy.json
+dmypy.json
+.pytest_cache
+
+.scrapy
+*.log

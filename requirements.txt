@@ -6,7 +6,7 @@ django-cors-headers==3.14.*
 djangorestframework==3.14.*
 django-imagekit==4.1.*
 Pillow==9.5.*
-facebook-scraper
+#facebook-scraper
 requests==2.31.*
 django-admin-commands==1.0
 ijson==3.2.*
@@ -16,10 +16,15 @@ gunicorn==20.1.*
 django-environ==0.10.*
 django-import-export==3.2.*
 psycopg==3.1.*
-#psycopg2cffi
+#psycopg2cffi   #pypy not working.. meh..
 pymemcache==4.0.*
 django-picklefield==3.1
 django-constance==2.9.*
 dj-database-url==2.0.*
 django-storages==1.13.*
 boto3==1.27.*
+apify ~= 1.0.0
+celery[redis]>=5.2.3,<6.0
+django-celery-beat==2.5.*
+django-celery-results==2.5.*
+#django-password-policies   # TODO

@@ -20,6 +20,5 @@ from django.urls import include, path
 
 urlpatterns = [
     path("i18n/", include("django.conf.urls.i18n")),
-    path('grappelli/', include('grappelli.urls')),  # grappelli URLS
 ]
 urlpatterns += i18n_patterns(path("admin/", admin.site.urls))

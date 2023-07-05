@@ -65,7 +65,7 @@ class ApifyPageImporter:
         # Prepare the Actor input
         run_input = {
             "startUrls": [{"url": url}],
-            "resultsLimit": 5000,
+            "resultsLimit": 100,
             "proxy": {
                 "useApifyProxy": True,
                 "apifyProxyGroups": ["RESIDENTIAL"],

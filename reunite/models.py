@@ -5,7 +5,6 @@ from django.utils.html import format_html, escape
 from django.utils.translation import gettext_lazy as _
 from pathlib import Path
 from urllib.parse import urlparse, unquote, urlsplit
-from django.utils.safestring import mark_safe
 from django.shortcuts import resolve_url
 from django.contrib.admin.templatetags.admin_urls import admin_urlname
 from storages.backends.s3boto3 import S3Boto3Storage
@@ -50,6 +49,21 @@ class Case(models.Model):
         return format_html(','.join(posts))
     fb_posts.short_description = 'Posts'
 
+    def posts_description(self):
+        posts = []
+        for post in self.posts.all():
+
+            post_text = post.post_text.replace('\n', '<br/>')
+            photos = FacebookPhoto.objects.filter(post=post)
+            for photo in photos:
+                photo_html = photo.photo_preview()
+                photo_html = '<div style="margin: auto; width: 50%;">' + photo_html + '</div><br/>'
+                post_text = photo_html + '<div style="width: 100%; direction: rtl; text-align: right; white-space: normal;">' + post_text + '</div>'
+            posts.append(post_text)
+        joined = '<hr/>'.join(posts)
+        return format_html(f'{joined}')
+    posts_description.short_description = 'Description'
+
     @staticmethod
     def autocomplete_search_fields():
         return ("case_code__iexact", "description__icontains",)
@@ -92,7 +106,7 @@ class CasePost(models.Model):
         if self.post:
             text = self.post.post_text
             text = text.replace('\n', '<br/>')
-            return format_html('<p dir="rtl" style="direction: rtl; text-align: right; word-break: break-all; white-space: normal;">{0}</p>'.format(text))
+            return format_html('<p style="direction: rtl; text-align: right; white-space: normal;">{0}</p>'.format(text))
         else:
             return '(No post)'
 
@@ -129,13 +143,8 @@ class FacebookPhoto(models.Model):
     def photo_preview(self):
         file_path_within_bucket = f'original/{self.photo_file_name()}'
         no_image_url = f'https://reunite-media.fra1.digitaloceanspaces.com/original/nophoto.jpg'
-        #if storage.exists(file_path_within_bucket):
         url = storage.url(file_path_within_bucket)
-        #print(url)
-        # TODO: Put error image
-        return format_html(f'<img onerror="this.src=\'{no_image_url}\'" src="{url}" />')
-        #else:
-        #    return '-'
+        return format_html(f'<img onerror="this.src=\'{no_image_url}\'" src="{url}" style="width:100%" />')
     photo_preview.short_description = _('Photo')
     photo_preview.allow_tags = True
 

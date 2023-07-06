@@ -5,7 +5,7 @@ import logging as log
 import sys
 from django.core.management import BaseCommand
 from apify.log import ActorLogFormatter
-from reunite.common.apify_page_importer import ApifyPageImporter
+from reunite.common.apify_facebook_scrapper_importer import ApifyFacebookScrapperImporter
 
 
 log.basicConfig(format='[ %(levelname)s ] %(message)s', level=log.DEBUG, stream=sys.stdout)
@@ -26,5 +26,5 @@ class Command(BaseCommand):
     help = "Imports the full Atfal-mafkooda page"
 
     def handle(self, *args, **options):
-        ApifyPageImporter().import_page('https://www.facebook.com/atfalmafkoda')
+        ApifyFacebookScrapperImporter().import_page('https://www.facebook.com/atfalmafkoda')
 

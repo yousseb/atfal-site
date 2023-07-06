@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django import forms
 from django.db import models
-from django.forms import Widget
 from django.utils.safestring import mark_safe
 from import_export.admin import ImportExportModelAdmin
 from related_admin import RelatedFieldAdmin
@@ -38,7 +37,7 @@ class CaseAdmin(ImportExportModelAdmin, RelatedFieldAdmin):
     form = CaseAdminForm
     model = Case
 
-    list_display = ['case_code', 'fb_posts', 'description', 'case_status']
+    list_display = ['case_code', 'fb_posts', 'posts_description', 'case_status']
     list_editable = ['case_status']
     list_filter = ['case_status']
     search_fields = ['case_code', 'description']

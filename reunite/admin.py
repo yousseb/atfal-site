@@ -19,7 +19,6 @@ class CaseAdminForm(forms.ModelForm):
     class Meta:
         model = Case
         fields = ['case_code', 'case_status', 'posts']
-        readonly_fields = ['description', ]
         widgets = {'description': forms.Textarea(attrs={'dir': 'rtl', 'readonly': 'readonly'})}
 
 
@@ -46,9 +45,11 @@ class CaseAdmin(ImportExportModelAdmin, RelatedFieldAdmin):
     list_per_page = 20
     # change_list_template = "admin/change_list_filter_sidebar.html"
 
+    readonly_fields = ['posts_description', ]
+
     fieldsets = (
         ('', {
-            'fields': ('case_code', 'case_status'),
+            'fields': ('case_code', 'case_status', 'posts_description'),
         }),
     )
     inlines = (FacebookPostInlineAdmin,)

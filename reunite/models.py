@@ -52,7 +52,6 @@ class Case(models.Model):
     def posts_description(self):
         posts = []
         for post in self.posts.all():
-
             post_text = post.post_text.replace('\n', '<br/>')
             photos = FacebookPhoto.objects.filter(post=post)
             for photo in photos:

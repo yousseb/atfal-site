@@ -21,6 +21,6 @@ from reunite import views
 
 urlpatterns = [
     path("i18n/", include("django.conf.urls.i18n")),
-    re_path('task/(?P<path>.*)', views.flower_app, name='flower'),
+    re_path('flower/(?P<path>.*)', views.flower_app, name='flower'),
 ]
 urlpatterns += i18n_patterns(path("admin/", admin.site.urls))

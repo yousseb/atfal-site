@@ -1,11 +1,9 @@
-setuptools
-wheel
-Django==4.2.*
-django-environ==0.10.*
+Django~=4.2.2
+django-environ~=0.10.0
 django-cors-headers==3.14.*
 djangorestframework==3.14.*
 django-imagekit==4.1.*
-Pillow==9.5.*
+Pillow~=10.0.0
 #facebook-scraper
 requests==2.31.*
 django-admin-commands==1.0
@@ -15,7 +13,7 @@ django-related-admin==1.0.*
 gunicorn==20.1.*
 django-environ==0.10.*
 django-import-export==3.2.*
-psycopg==3.1.*
+#psycopg==3.1.*
 #psycopg2cffi   #pypy not working.. meh..
 pymemcache==4.0.*
 django-picklefield==3.1
@@ -29,3 +27,4 @@ django-celery-beat==2.5.*
 django-celery-results==2.5.*
 #django-password-policies   # TODO
 flower
+cx-Oracle~=8.3.0

@@ -1,7 +1,7 @@
 FROM python:3.12.0b4-slim-bookworm as base
 
 LABEL version="1.0"
-LABEL description="Reunite image"
+LABEL description="Reunite web image"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -35,6 +35,10 @@ ENV LC_ALL C.UTF-8
 # better memory allocation
 ENV LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libjemalloc.so.2
 
+# basic python settings for container
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
 # app environment
 ENV PYTHONIOENCODING UTF-8
 ENV PYTHONPATH /app/
@@ -43,6 +47,8 @@ ENV PYTHONPATH /app/
 RUN pip install --no-cache-dir --upgrade pip wheel setuptools
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+WORKDIR /app/
 
 ARG PORT=8000
 ARG HOST=0.0.0.0

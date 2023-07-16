@@ -1,0 +1,20 @@
+[Unit]
+Description=PostgreSQL Atfal-site DB
+After=docker.service
+Requires=docker.service
+ReloadPropagatedFrom=docker.service
+
+[Service]
+TimeoutStartSec=0
+Restart=always
+ExecStartPre=-/usr/bin/docker exec %n stop
+ExecStartPre=-/usr/bin/docker rm %n
+ExecStart=/usr/bin/docker run --rm --name %n \
+            --shm-size=1g \
+            -p 5432:5432 \
+            -v /srv/postgresql/15/main/:/var/lib/postgresql/data \
+             atfal-db:latest
+ExecStop=-/usr/bin/docker kill %n
+
+[Install]
+WantedBy=default.target

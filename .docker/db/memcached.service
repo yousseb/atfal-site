@@ -1,0 +1,19 @@
+[Unit]
+Description=Memcached - Atfalmadkoda
+After=docker.service
+Requires=docker.service
+ReloadPropagatedFrom=docker.service
+
+[Service]
+TimeoutStartSec=0
+Restart=always
+ExecStartPre=-/usr/bin/docker exec %n stop
+ExecStartPre=-/usr/bin/docker rm %n
+ExecStart=/usr/bin/docker run --rm --name %n \
+            -p 11211:11211 \
+            memcached:alpine \
+            -m 128
+ExecStop=-/usr/bin/docker kill %n
+
+[Install]
+WantedBy=default.target

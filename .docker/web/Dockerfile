@@ -7,7 +7,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 RUN set -ex; \
     apt-get update && \
-    apt-get -qq install wget curl locales libjemalloc2 ca-certificates tzdata libopenblas0 \
+    apt-get install -qq --no-install-recommends wget curl locales libjemalloc2 ca-certificates tzdata libopenblas0 \
             build-essential cmake python3-dev libffi-dev unzip libaio1 python3-typing-extensions && \
     rm -rf /var/lib/apt/lists/*
 
@@ -28,7 +28,7 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg ma
     && wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | tee /etc/apt/trusted.gpg.d/pgdg.asc &>/dev/null
 RUN set -ex; \
     apt-get update && \
-    apt-get install postgresql-client postgresql-common -y && \
+    apt-get install -qq --no-install-recommends postgresql-client postgresql-common  && \
     rm -rf /var/lib/apt/lists/*
 
 
@@ -66,3 +66,5 @@ ENTRYPOINT /usr/local/bin/gunicorn --access-logfile - \
             --workers 4 --keep-alive 5 \
             --max-requests 500 --max-requests-jitter 20 \
             --bind ${HOST}:${PORT} atfalsite.wsgi:application
+
+# docker build . -f .docker/Dockerfile-web  -tatfal-web

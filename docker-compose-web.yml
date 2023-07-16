@@ -1,0 +1,40 @@
+version: "3.9"
+services:
+
+    nginx:
+        build: ./.docker/nginx/
+        container_name: nginx
+        restart: always
+        volumes:
+          - static_volume:/srv/atfal-site/static/:ro
+          - media_volume:/srv/atfal-site/media/:ro
+          - etc_nginx_volume:/etc/nginx/
+        ports:
+          - "80:80"
+          - "443:443"
+        depends_on:
+          - django
+
+    flower:
+        image: ./.docker/web/
+        container_name: django-flower
+        ports:
+          - "5545:5545"
+        command: /start-flower
+
+    django:
+        build: ./.docker/web/
+        restart: always
+        command: >
+          sh -c "python manage.py collectstatic --noinput
+          && /usr/local/bin/gunicorn --access-logfile - --workers 4 --keep-alive 5 --max-requests 500 --max-requests-jitter 20 --bind 0.0.0.0:8000 atfalsite.wsgi:application"
+        ports:
+          - "8000:8000"
+        volumes:
+          - static_volume:/srv/atfal-site/static/
+          - media_volume:/srv/atfal-site/media/
+
+    volumes:
+      static_volume:
+      media_volume:
+      etc_nginx_volume:

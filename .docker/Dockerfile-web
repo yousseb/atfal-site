@@ -1,12 +1,14 @@
-FROM python:3.12.0b4-slim-bookworm as base
+FROM python:3.11-slim-bookworm as base
 
 LABEL version="1.0"
 LABEL description="Reunite web image"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get -qq install wget curl locales libjemalloc2 ca-certificates tzdata libopenblas0 \
-                      build-essential cmake python3-dev libffi-dev unzip libaio1 && \
+RUN set -ex; \
+    apt-get update && \
+    apt-get -qq install wget curl locales libjemalloc2 ca-certificates tzdata libopenblas0 \
+            build-essential cmake python3-dev libffi-dev unzip libaio1 python3-typing-extensions && \
     rm -rf /var/lib/apt/lists/*
 
 # Oracle instant client
@@ -24,7 +26,10 @@ RUN apt-get update && apt-get -qq install wget curl locales libjemalloc2 ca-cert
 
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
     && wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | tee /etc/apt/trusted.gpg.d/pgdg.asc &>/dev/null
-RUN apt-get update && apt-get install postgresql-client postgresql-common -y
+RUN set -ex; \
+    apt-get update && \
+    apt-get install postgresql-client postgresql-common -y && \
+    rm -rf /var/lib/apt/lists/*
 
 
 # locales to UTF-8
@@ -57,10 +62,7 @@ ENV PORT=${PORT}
 STOPSIGNAL SIGTERM
 EXPOSE ${PORT}
 
-ENTRYPOINT [ "/usr/local/bin/gunicorn", \
-             "--access-logfile" "-", \
-             "--workers" "4", \
-             "--keep-alive" "5", \
-             "--max-requests" "500", "--max-requests-jitter" "20", \
-             "--bind" "${HOST}:${PORT}", \
-             "atfalsite.wsgi:application"]
+ENTRYPOINT /usr/local/bin/gunicorn --access-logfile - \
+            --workers 4 --keep-alive 5 \
+            --max-requests 500 --max-requests-jitter 20 \
+            --bind ${HOST}:${PORT} atfalsite.wsgi:application

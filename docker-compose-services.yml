@@ -42,5 +42,5 @@ services:
           - redis
 
 # docker-compose  -f docker-compose-services.yml build --no-cache
-# docker-compose  -f docker-compose-services.yml up
-
+# docker-compose  -f docker-compose-services.yml up -d
+# docker-compose  -f docker-compose-services.yml logs -f

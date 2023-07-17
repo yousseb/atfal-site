@@ -2,17 +2,23 @@ version: "3.9"
 services:
 
     nginx:
-        build: ./.docker/nginx/
+        image: nginx-custom
+        build:
+          dockerfile: ./.docker/nginx/Dockerfile
+          context: .
         container_name: nginx
         restart: always
-        volumes:
-          - static_volume:/srv/atfal-site/static/:ro
-          - media_volume:/srv/atfal-site/media/:ro
-          - etc_nginx_volume:/etc/nginx/
         network_mode: "host"
+        command: sh -c "service cron start; nginx -g 'daemon off;'"
         ports:
           - "80:80"
           - "443:443"
+        volumes:
+          - /srv/etc/nginx/:/etc/nginx/:rw
+          - /srv/etc/letsencrypt/:/etc/letsencrypt/:rw
+          - /srv/var/log/:/var/log
+          - /srv/atfal-site/static/:/srv/atfal-site/static/:ro
+          - /srv/atfal-site/media/:/srv/atfal-site/media/:ro
         depends_on:
           - django
 
@@ -25,7 +31,11 @@ services:
         network_mode: "host"
         ports:
           - "5545:5545"
-        command: /start-flower
+        entrypoint: /usr/local/bin/celery -A atfalsite flower --port=5545 --url-prefix="flower"
+        volumes:
+          - /srv/atfal-site/static/:/app/static/
+          - /srv/atfal-site/media/:/app/media/
+          - .:/app/
 
     django:
         image: atfal-web
@@ -36,15 +46,19 @@ services:
         restart: always
         network_mode: "host"
         command: >
-          sh -c "python manage.py collectstatic --noinput
+          sh -c "set -ex;
+          python manage.py collectstatic --noinput
           && /usr/local/bin/gunicorn --access-logfile - --workers 4 --keep-alive 5 --max-requests 500 --max-requests-jitter 20 --bind 0.0.0.0:8000 atfalsite.wsgi:application"
         ports:
           - "8000:8000"
         volumes:
-          - static_volume:/srv/atfal-site/static/
-          - media_volume:/srv/atfal-site/media/
+          - /srv/atfal-site/static/:/app/static/
+          - /srv/atfal-site/media/:/app/media/
+          - .:/app/
 
-    volumes:
-      static_volume:
-      media_volume:
-      etc_nginx_volume:
+#volumes:
+#    static_volume:
+#    media_volume:
+
+# docker-compose  -f docker-compose-web.yml build --no-cache
+# docker-compose  -f docker-compose-web.yml up -d

@@ -15,6 +15,8 @@ RUN set -ex; \
 # better memory allocation
 ENV LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libjemalloc.so.2
 
+VOLUME /etc/nginx
+
 EXPOSE 80
 EXPOSE 443
 

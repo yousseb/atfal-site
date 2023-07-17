@@ -28,4 +28,4 @@ django-celery-beat==2.5.*
 django-celery-results==2.5.*
 #django-password-policies   # TODO
 flower
-
+watchfiles~=0.19.0

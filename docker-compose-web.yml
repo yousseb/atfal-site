@@ -9,6 +9,7 @@ services:
           - static_volume:/srv/atfal-site/static/:ro
           - media_volume:/srv/atfal-site/media/:ro
           - etc_nginx_volume:/etc/nginx/
+        network_mode: "host"
         ports:
           - "80:80"
           - "443:443"
@@ -16,15 +17,24 @@ services:
           - django
 
     flower:
-        image: ./.docker/web/
+        image: atfal-web
+        build:
+          dockerfile: ./.docker/web/Dockerfile
+          context: .
         container_name: django-flower
+        network_mode: "host"
         ports:
           - "5545:5545"
         command: /start-flower
 
     django:
-        build: ./.docker/web/
+        image: atfal-web
+        build:
+          dockerfile: ./.docker/web/Dockerfile
+          context: .
+        container_name: django-web
         restart: always
+        network_mode: "host"
         command: >
           sh -c "python manage.py collectstatic --noinput
           && /usr/local/bin/gunicorn --access-logfile - --workers 4 --keep-alive 5 --max-requests 500 --max-requests-jitter 20 --bind 0.0.0.0:8000 atfalsite.wsgi:application"

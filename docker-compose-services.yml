@@ -1,17 +1,25 @@
 version: "3.9"
-services:
 
+services:
     redis:
-        image: redis
+        image: 'bitnami/redis:latest'
+        environment:
+          - ALLOW_EMPTY_PASSWORD=yes
+        container_name: atfal-redis
+        restart: always
+        network_mode: "host"
         ports:
           - '6379:6379'
 
     celery-beat:
-        build: ./.docker/web/
+        image: atfal-web
+        build:
+          dockerfile: ./.docker/web/Dockerfile
+          context: .
         container_name: celery-beat
         restart: always
-        command: >
-          sh -c "/usr/local/bin/celery -A atfalsite beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+        network_mode: "host"
+        entrypoint: /usr/local/bin/watchfiles --filter python '/usr/local/bin/celery -A atfalsite beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler'
         volumes:
           - /srv/atfal-site/:/app/
         ports: []
@@ -19,13 +27,20 @@ services:
           - redis
 
     celery-feed-worker:
-        build: ./.docker/web/
+        image: atfal-web
+        build:
+          dockerfile: ./.docker/web/Dockerfile
+          context: .
         container_name: celery-feed-worker
         restart: always
-        command: >
-          sh -c "/usr/local/bin/celery -A atfalsite worker -l INFO  -Q feeds"
+        network_mode: "host"
+        entrypoint: /usr/local/bin/watchfiles --filter python '/usr/local/bin/celery -A atfalsite worker -l INFO -Q feeds'
         volumes:
           - /srv/atfal-site/:/app/
         ports: []
         depends_on:
           - redis
+
+# docker-compose  -f docker-compose-services.yml build --no-cache
+# docker-compose  -f docker-compose-services.yml up
+

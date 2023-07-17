@@ -154,8 +154,6 @@ USE_TZ = True
 
 memcached_cache = env.cache(backend='django.core.cache.backends.memcached.PyMemcacheCache')
 memcached_cache['OPTIONS'] = {
-    "MAX_ENTRIES": 1000,
-    "binary": True,
     "no_delay": True,
     "ignore_exc": True,
     "max_pool_size": 4,
@@ -391,12 +389,14 @@ JAZZMIN_SETTINGS["show_ui_builder"] = False
 
 STORAGE_CONF = env.dict('STORAGE_CONF')
 AWS_S3_REGION_NAME = STORAGE_CONF['AWS_S3_REGION_NAME']
+NAMESPACE = STORAGE_CONF['NAMESPACE']
 # https://docs.aws.amazon.com/cli/latest/topic/s3-config.html#addressing-style
-AWS_S3_ADDRESSING_STYLE = 'virtual'     # DigitalOcean addressing style
+# AWS_S3_ADDRESSING_STYLE = 'virtual'     # DigitalOcean addressing style
 AWS_STORAGE_BUCKET_NAME = STORAGE_CONF['BUCKET_NAME']
-AWS_S3_ENDPOINT_URL = f'https://{AWS_S3_REGION_NAME}.digitaloceanspaces.com'
+AWS_S3_ENDPOINT_URL = f'https://{NAMESPACE}.compat.objectstorage.{AWS_S3_REGION_NAME}.oraclecloud.com'
 AWS_ACCESS_KEY_ID = STORAGE_CONF['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = STORAGE_CONF['AWS_SECRET_ACCESS_KEY']
+#AWS_S3_VERIFY = False
 
 # Celery & Celery Beat
 CELERY_RESULT_BACKEND = 'django-db'

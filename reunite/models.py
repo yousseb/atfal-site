@@ -1,4 +1,6 @@
 import uuid
+
+from cache_memoize import cache_memoize
 from django.db import models
 from django.urls import reverse
 from django.utils.html import format_html, escape
@@ -8,6 +10,7 @@ from urllib.parse import urlparse, unquote, urlsplit
 from django.shortcuts import resolve_url
 from django.contrib.admin.templatetags.admin_urls import admin_urlname
 from storages.backends.s3boto3 import S3Boto3Storage
+
 storage = S3Boto3Storage()
 
 
@@ -47,6 +50,7 @@ class Case(models.Model):
             posts.append(link)
             i = i + 1
         return format_html(','.join(posts))
+
     fb_posts.short_description = 'Posts'
 
     def posts_description(self):
@@ -61,6 +65,7 @@ class Case(models.Model):
             posts.append(post_text)
         joined = '<hr/>'.join(posts)
         return format_html(f'{joined}')
+
     posts_description.short_description = 'Description'
 
     @staticmethod
@@ -105,12 +110,18 @@ class CasePost(models.Model):
         if self.post:
             text = self.post.post_text
             text = text.replace('\n', '<br/>')
-            return format_html('<p style="direction: rtl; text-align: right; white-space: normal;">{0}</p>'.format(text))
+            return format_html(
+                '<p style="direction: rtl; text-align: right; white-space: normal;">{0}</p>'.format(text))
         else:
             return '(No post)'
 
     def __str__(self):
         return "{}_{}".format(self.case.__str__(), self.post.__str__())
+
+
+@cache_memoize(10000)
+def get_signed_url(bucket_path):
+    return storage.url(bucket_path, expire=10800)
 
 
 class FacebookPhoto(models.Model):
@@ -132,18 +143,20 @@ class FacebookPhoto(models.Model):
         cleaned_image = unquote(Path(url_parsed.path).name)
         return format_html(cleaned_image)
         # cleaned_image = cleaned_image.split("?")[0]
+
     photo_file_name.short_description = _('File name')
 
     def preview_url(self):
         file_path_within_bucket = f'original/{self.photo_file_name()}'
-        url = storage.url(file_path_within_bucket)
+        url = get_signed_url(file_path_within_bucket)
         return url
 
     def photo_preview(self):
         file_path_within_bucket = f'original/{self.photo_file_name()}'
         no_image_url = f'https://reunite-media.fra1.digitaloceanspaces.com/original/nophoto.jpg'
-        url = storage.url(file_path_within_bucket)
+        url = get_signed_url(file_path_within_bucket)
         return format_html(f'<img onerror="this.src=\'{no_image_url}\'" src="{url}" style="width:100%" />')
+
     photo_preview.short_description = _('Photo')
     photo_preview.allow_tags = True
 

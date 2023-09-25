@@ -12,11 +12,11 @@ import sys
 import re
 from apify_client import ApifyClient
 from apify.log import ActorLogFormatter
+from reunite.common.apify_temp_table import add_temp_record, ApifyFacebookPost
 from reunite.models import FacebookPhoto, FacebookPost, Case
 from storages.backends.s3boto3 import S3Boto3Storage
 import requests
 
-storage = S3Boto3Storage()
 log.basicConfig(format='[ %(levelname)s ] %(message)s', level=log.INFO, stream=sys.stdout)
 
 handler = log.StreamHandler()
@@ -37,23 +37,18 @@ class ApifyFacebookScrapperImporter:
         self.posts_imported = 0
         self.photos_imported = 0
         self.cases_imported = 0
+        self.storage = S3Boto3Storage()
 
-    def download_file(self, url: str, path: Path):
+    def download_file(self, url: str, path: Path) -> None:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.35 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.35 (KHTML, like Gecko) '
+                          'Chrome/39.0.2171.95 Safari/537.36'}
         r = requests.get(url, headers=headers)
         with open(path, 'wb') as f:
             for chunk in r.iter_content(chunk_size=1024):
                 if chunk:  # filter out keep-alive new chunks
                     f.write(chunk)
         return
-
-    # def download_posts(self, url: str):
-    #     headers = {
-    #         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.35 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
-    #     r = requests.get(url, headers=headers)
-    #     text = r.text
-    #     self.apify_posts = json.loads(text, object_hook=lambda d: SimpleNamespace(**d))
 
     @staticmethod
     def find_code(text: str) -> Optional[str]:
@@ -69,153 +64,102 @@ class ApifyFacebookScrapperImporter:
                     log.warning(f'Error while finding code for: {cleaned}')
                     return None
 
-    @staticmethod
-    def post_is_share(post) -> bool:
-        if hasattr(post, "text"):
-            return False
-        else:
-            return True
+    # Try real hard to see if we have a similar Facebook post
+    def get_django_post(self, temp_post: ApifyFacebookPost) -> Optional[FacebookPost]:
+        post = None
+        if temp_post.post_id is not None and temp_post.post_id != '':
+            post = FacebookPost.objects.filter(post_id=temp_post.post_id).first()
+        if post is None:
+            post = FacebookPost.objects.filter(post_url=temp_post.url).first()
+        if post is None:
+            post = FacebookPost.objects.filter(post_url=temp_post.top_level_url).first()
 
-    def import_record(self, record):
-        post_id = record["postId"]
+        if post is None:
+            for temp_photo in temp_post.photos:
+                for django_photo in FacebookPhoto.objects.all():
+                    if django_photo.photo_file_name == temp_photo.photo_file_name():
+                        post = django_photo.post
+                        break
+        return post
 
-        if 'sharedPost' in record:
-            log.warning(f'Post {post_id} has sharedPost. Will only import media from sharedPost, but not post or case.')
-            media = record['sharedPost']['media']
-            photos = []
-            for media_item in media:
-                if '__typename' in media_item:
-                    media_typename = media_item['__typename']
-                    if media_typename.lower() == 'photo' and 'photo_image' in media_item:     # Photo?
-                        photo_image_uri = media_item['photo_image']['uri']
-                        media_url = media_item['url']
-                        ocr_text = media_item['ocrText']
+    def import_temp_records(self):
+        from .apify_temp_table import session
+        temp_posts = session.query(ApifyFacebookPost).all()
+        for temp_post in temp_posts:
+            django_post = self.get_django_post(temp_post)
 
-                        try:
-                            photo = FacebookPhoto.objects.get(media_id=media_item['id'])
-                        except:
-                            photo = FacebookPhoto()
-                        photo.url = media_url
-                        photo.ocr_text = ocr_text
-                        photo.photo_image_url = photo_image_uri
-                        photo.media_id = media_item['id']
-                        photos.append(photo)
-            for photo in photos:
-                file_name = photo.photo_file_name()
-                file_name_in_bucket = f'original/{file_name}'
-                if not storage.exists(file_name_in_bucket):
-                    log.info(f'Photo {file_name_in_bucket} not in bucket. Uploading.')
-                    for _ in range(3):
-                        try:
-                            response = requests.get(photo.photo_image_url)
-                            if response.status_code in [200, 404]:
-                                break
-                        except requests.exceptions.ConnectionError:
-                            pass
-
-                    if response is not None and response.status_code == 200:
-                        # Default ACL is private
-                        file = storage.open(file_name_in_bucket, 'w')
-                        file.write(response.content)
-                        file.close()
-                        log.info(f'Photo {file_name_in_bucket} not in bucket. Uploaded')
-            return
-
-        if 'media' not in record or 'text' not in record:
-            log.warning(f'Post {post_id} has no text and mo media. Likely a re-share of old post.')
-            return False
-
-        post_time = record["time"]
-        post_timestamp = record["timestamp"]
-        post_feedback_id = record["feedbackId"]
-        post_top_level_url = record["topLevelUrl"]
-        post_facebook_id = record["facebookId"]
-        text = None
-        media = None
-        text = record['text']
-
-        photos = []
-        media = record['media']
-        for media_item in media:
-            if '__typename' in media_item:
-                media_typename = media_item['__typename']  # Photo
-                if media_typename.lower() == 'photo' and 'photo_image' in media_item:
-                    photo_image_uri = media_item['photo_image']['uri']
-                    media_url = media_item['url']
-                    ocr_text = media_item['ocrText']
-
-                    try:
-                        photo = FacebookPhoto.objects.get(media_id=media_item['id'])
-                    except:
-                        photo = FacebookPhoto()
-                    photo.url = media_url
-                    photo.ocr_text = ocr_text
-                    photo.photo_image_url = photo_image_uri
-                    photo.media_id = media_item['id']
-                    photos.append(photo)
-                else:
-                    log.warning(f"post {post_id}: Media is not a photo. Skipping")
+            if django_post is not None:
+                post = django_post
             else:
-                log.warning(f'Could not determine media type for post {post_id}. Skipping.')
+                post = FacebookPost()
 
-        if len(photos) == 0:
-            log.warning(f'Photos 0 for post {post_id}. Skipping.')
-            return False
+            post.post_url = temp_post.url
+            if temp_post.post_id is not None:
+                post.post_id = temp_post.post_id
+            if temp_post.text is not None and temp_post.text != "":
+                post.post_text = temp_post.text
 
-        try:
-            post = FacebookPost.objects.get(post_id=post_id)
-        except:
-            post = FacebookPost()
-        post.post_url = post_top_level_url
-        post.post_id = post_id
-        post.post_text = text
-        post.post_time = post_time
-        post.case_code = self.find_code(text)
-        post.facebook_id = post_facebook_id
-        post.save()
-        self.posts_imported = self.posts_imported + 1
-        if post.case_code is not None:
-            try:
-                case = Case.objects.get(case_code=post.case_code)
-            except:
-                case = Case()
-                self.cases_imported = self.cases_imported + 1
-            case.description = post.post_text
-            case.case_code = post.case_code
-            case.save()
-            case.posts.add(post)
-            case.save()
+            post.post_time = temp_post.post_time
+            post.case_code = self.find_code(temp_post.text)
+            if temp_post.facebook_id is not None:
+                post.facebook_id = temp_post.facebook_id
+            post.save()
 
-        for photo in photos:
-            try:
-                photo.post = post
-                photo.save()
-                self.photos_imported = self.photos_imported + 1
+            self.posts_imported = self.posts_imported + 1
+            if post.case_code is not None:
+                case = Case.objects.filter(case_code=post.case_code).first()
+                if case is None:
+                    case = Case()
+                    self.cases_imported = self.cases_imported + 1
+                case.description = post.post_text
+                case.case_code = post.case_code
+                case.save()
+                case.posts.add(post)
+                case.save()
 
-                file_name = photo.photo_file_name()
-                file_name_in_bucket = f'original/{file_name}'
-                if not storage.exists(file_name_in_bucket):
-                    log.info(f'Photo {file_name_in_bucket} not in bucket. Uploading.')
-                    for _ in range(3):
-                        try:
-                            response = requests.get(photo.photo_image_url)
-                            if response.status_code in [200, 404]:
-                                break
-                        except requests.exceptions.ConnectionError:
-                            pass
+            django_photos = []
 
-                    if response is not None and response.status_code == 200:
-                        # Default ACL is private
-                        file = storage.open(file_name_in_bucket, 'w')
-                        file.write(response.content)
-                        file.close()
-                        log.info(f'Photo {file_name_in_bucket} not in bucket. Uploaded.')
+            for temp_photo in temp_post.photos:
+                photo = FacebookPhoto.objects.filter(photo_image_url=temp_photo.photo_image_url).first()
+                if photo is None:
+                    photo = FacebookPhoto()
+                photo.url = temp_photo.url
+                photo.ocr_text = temp_photo.ocr_text
+                photo.photo_image_url = temp_photo.photo_image_url
+                photo.media_id = temp_photo.media_id
+                django_photos.append(photo)
 
-            except Exception as ex:
-                log.exception(ex)
+            for photo in django_photos:
+                try:
+                    photo.post = post
+                    photo.save()
+                    self.photos_imported = self.photos_imported + 1
+                    self.upload_photo(photo)
+                except Exception as ex:
+                    log.exception(ex)
+
+    def upload_photo(self, photo: FacebookPhoto) -> None:
+        file_name = photo.photo_file_name
+        file_name_in_bucket = f'original/{file_name}'
+        if not self.storage.exists(file_name_in_bucket):
+            log.info(f'Photo {file_name_in_bucket} not in bucket. Uploading.')
+            response = None
+            for _ in range(3):
+                try:
+                    response = requests.get(photo.photo_image_url)
+                    if response.status_code in [200, 404]:
+                        break
+                except requests.exceptions.ConnectionError:
+                    pass
+
+            if response is not None and response.status_code == 200:
+                # Default ACL is private
+                file = self.storage.open(file_name_in_bucket, 'w')
+                file.write(response.content)
+                file.close()
+                log.info(f'Photo {file_name_in_bucket} not in bucket. Uploaded.')
 
     def import_page(self, url: str):
-
         # Initialize the ApifyClient with your API token
         client = ApifyClient(config.APIFY_API_KEY)
 
@@ -246,7 +190,8 @@ class ApifyFacebookScrapperImporter:
         self.download_file(url, Path(temp_file_name))
         with open(temp_file_name, "rb") as f:
             for record in ijson.items(f, "item"):
-                self.import_record(record)
+                add_temp_record(record)
+        self.import_temp_records()
 
         print(f'Posts: {self.posts_imported}')
         print(f'Photos: {self.photos_imported}')

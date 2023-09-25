@@ -9,5 +9,5 @@ class Command(BaseCommand):
     help = "Imports the full Atfal-mafkooda page from Apify runs"
 
     def handle(self, *args, **options):
-        json_url = 'https://api.apify.com/v2/datasets/FHYrURTScUGUrckc3/items?clean=true&format=json'
+        json_url = 'https://api.apify.com/v2/datasets/VXKqJ33pWoVJ7A8fb/items?clean=true&format=json'
         ApifyFacebookScrapperImporter().import_url(json_url)

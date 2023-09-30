@@ -12,7 +12,7 @@ services:
           - '6379:6379'
 
     celery-beat:
-        image: atfal-web
+        image: atfal-site/atfal-web
         build:
           dockerfile: ./.docker/web/Dockerfile
           context: .
@@ -27,7 +27,7 @@ services:
           - redis
 
     celery-feed-worker:
-        image: atfal-web
+        image: atfal-site/atfal-web
         build:
           dockerfile: ./.docker/web/Dockerfile
           context: .

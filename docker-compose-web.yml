@@ -3,6 +3,7 @@ services:
 
     nginx:
         image: atfal-site/nginx-custom
+        pull_policy: always
         build:
           dockerfile: ./.docker/nginx/Dockerfile
           context: .
@@ -24,6 +25,7 @@ services:
 
     flower:
         image: atfal-site/atfal-web
+        pull_policy: always
         build:
           dockerfile: ./.docker/web/Dockerfile
           context: .
@@ -39,6 +41,7 @@ services:
 
     django:
         image: atfal-site/atfal-web
+        pull_policy: always        
         build:
           dockerfile: ./.docker/web/Dockerfile
           context: .

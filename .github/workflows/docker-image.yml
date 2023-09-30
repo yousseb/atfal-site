@@ -11,7 +11,7 @@ jobs:
      strategy:
        matrix:
          label: [reunite, other]
-     runs-on: [self-hosted, "${{ matrix.labels }}"]
+     runs-on: [self-hosted, "${{ matrix.label }}"]
 
      steps:
      - uses: actions/checkout@v3

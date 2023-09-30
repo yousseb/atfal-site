@@ -3,6 +3,7 @@ version: "3.9"
 services:
     redis:
         image: 'bitnami/redis:latest'
+        pull_policy: always
         environment:
           - ALLOW_EMPTY_PASSWORD=yes
         container_name: atfal-redis
@@ -13,6 +14,7 @@ services:
 
     celery-beat:
         image: atfal-site/atfal-web
+        pull_policy: always
         build:
           dockerfile: ./.docker/web/Dockerfile
           context: .
@@ -28,6 +30,7 @@ services:
 
     celery-feed-worker:
         image: atfal-site/atfal-web
+        pull_policy: always
         build:
           dockerfile: ./.docker/web/Dockerfile
           context: .

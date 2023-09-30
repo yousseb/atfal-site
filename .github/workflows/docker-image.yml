@@ -7,11 +7,11 @@ on:
     branches: [ "main" ]
 
 jobs:
-   build_matrix:
+   build:
      strategy:
        matrix:
-         label: ['reunite', 'other']
-     runs-on: [self-hosted, '${{ matrix.labels }}']
+         label: [reunite, other]
+     runs-on: [self-hosted, "${{ matrix.labels }}"]
 
      steps:
      - uses: actions/checkout@v3

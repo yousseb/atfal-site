@@ -10,9 +10,11 @@ jobs:
 
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      run: |
+        docker-compose build --no-cache -f docker-compose-services.yml
+        docker-compose build --no-cache -f docker-compose-web.yml

@@ -2,7 +2,7 @@ version: "3.9"
 services:
 
     nginx:
-        image: nginx-custom
+        image: atfal-site/nginx-custom
         build:
           dockerfile: ./.docker/nginx/Dockerfile
           context: .
@@ -23,7 +23,7 @@ services:
           - django
 
     flower:
-        image: atfal-web
+        image: atfal-site/atfal-web
         build:
           dockerfile: ./.docker/web/Dockerfile
           context: .
@@ -38,7 +38,7 @@ services:
           - .:/app/
 
     django:
-        image: atfal-web
+        image: atfal-site/atfal-web
         build:
           dockerfile: ./.docker/web/Dockerfile
           context: .

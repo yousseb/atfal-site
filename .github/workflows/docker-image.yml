@@ -16,5 +16,5 @@ jobs:
     - uses: actions/checkout@v3
     - name: Build the Docker image
       run: |
-        docker compose -f docker-compose-services.yml -f build docker-compose-web.yml --no-cache
+        docker compose -f docker-compose-services.yml build docker-compose-web.yml --no-cache
 

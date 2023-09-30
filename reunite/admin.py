@@ -106,7 +106,8 @@ class ImagePreviewWidget(forms.widgets.FileInput):
             no_image_url = f'https://reunite-media.fra1.digitaloceanspaces.com/original/nophoto.jpg'
 
             img_html = mark_safe(
-                f'<br><img onerror="this.src=\'{no_image_url}\'" src="{value}" width="200" />')
+                f'<img onerror="this.src=\'{no_image_url}\'" src="{value}" '
+                f'style="display: inline; width: 200px; max-width: 400px; height: auto;"/>')
             return f'{img_html}'
         return input_html
 

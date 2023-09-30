@@ -48,6 +48,7 @@ services:
         command: >
           sh -c "set -ex;
           python manage.py collectstatic --noinput
+          && python manage.py migrate
           && /usr/local/bin/gunicorn --access-logfile - --workers 4 --keep-alive 5 --max-requests 500 --max-requests-jitter 20 --bind 0.0.0.0:8000 atfalsite.wsgi:application"
         ports:
           - "8000:8000"

@@ -59,10 +59,12 @@ class Case(models.Model):
         for post in self.posts.all():
             post_text = post.post_text.replace('\n', '<br/>')
             photos = FacebookPhoto.objects.filter(post=post)
+            photos_list = ""
             for photo in photos:
-                photo_html = photo.photo_preview()
-                photo_html = '<div style="margin: auto; width: 50%;">' + photo_html + '</div><br/>'
-                post_text = photo_html + '<div style="width: 100%; direction: rtl; text-align: right; white-space: normal;">' + post_text + '</div>'
+                photos_list = photos_list + ' ' + photo.photo_preview()
+            photo_html = '<div style="margin: auto; width: 50%;">' + photos_list + '</div><br/>'
+            post_text = photo_html + ('<div style="width: 100%; direction: rtl; '
+                                      'text-align: right; white-space: normal;">') + post_text + '</div>'
             posts.append(post_text)
         joined = '<hr/>'.join(posts)
         return format_html(f'{joined}')
@@ -84,7 +86,8 @@ class FacebookPost(models.Model):
                                help_text=_('Facebook unique post id'))
     post_text = models.TextField(max_length=10000, db_comment='Post text', null=True, help_text=_('Facebook post text'))
     post_time = models.DateTimeField(db_comment='Post time', null=True, help_text=_('Facebook post time'))
-    post_timestamp = models.BigIntegerField(db_comment='Post timestamp', null=True, help_text=_('Facebook post timestamp'))
+    post_timestamp = models.BigIntegerField(db_comment='Post timestamp', null=True,
+                                            help_text=_('Facebook post timestamp'))
     case_code = models.CharField(max_length=200, db_comment='Case Code', null=True, help_text=_('Case code from text'))
     facebook_id = models.CharField(max_length=200, unique=False, db_comment='Facebook post id', null=True,
                                    help_text=_('Importer Facebook post id'))
@@ -159,7 +162,9 @@ class FacebookPhoto(models.Model):
         file_path_within_bucket = f'original/{self.photo_file_name}'
         no_image_url = f'https://reunite-media.fra1.digitaloceanspaces.com/original/nophoto.jpg'
         url = get_signed_url(file_path_within_bucket)
-        return format_html(f'<img onerror="this.src=\'{no_image_url}\'" src="{url}" style="width:100%" />')
+        return format_html(f'<img onerror="this.src=\'{no_image_url}\'" '
+                           f'src="{url}" '
+                           f'style="max-width: 100%;height: auto;" />')
 
     photo_preview.short_description = _('Photo')
     photo_preview.allow_tags = True

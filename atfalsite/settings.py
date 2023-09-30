@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'constance.backends.database',
     'django_celery_beat',
     'django_celery_results',
+    # 'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -131,6 +132,10 @@ REST_FRAMEWORK = {
     # or allow read-only access for unauthenticated users.
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ]
 }
 

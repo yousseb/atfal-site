@@ -2,9 +2,11 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
    build:
@@ -18,4 +20,6 @@ jobs:
      - name: Build the Docker image
        run: |
          docker compose -f docker-compose-services.yml -f docker-compose-web.yml build --no-cache
+         /usr/local/bin/code_deploy.sh
+         
 

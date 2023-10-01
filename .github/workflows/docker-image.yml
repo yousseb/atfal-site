@@ -41,7 +41,7 @@ jobs:
      - name: Restart Web
        run: |
          docker compose -f docker-compose-web.yml down
-         docker compose -f docker-compose-web.yml up -d
+         docker compose -f docker-compose-web.yml up -d --remove-orphans --wait --no-color --force-recreate
 
    restart-services:
      name: Restart Services
@@ -51,4 +51,4 @@ jobs:
      - name: Restart Web
        run: |
          docker compose -f docker-compose-services.yml down
-         docker compose -f docker-compose-services.yml up -d
+         docker compose -f docker-compose-services.yml up -d --remove-orphans --wait --no-color --force-recreate

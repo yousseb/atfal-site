@@ -53,13 +53,13 @@ INSTALLED_APPS = [
     "corsheaders",
     'rest_framework',
     'rest_framework.authtoken',
+    'drf_yasg',
     # 'django_admin_commands',
     'import_export',
     'reunite',
     'constance.backends.database',
     'django_celery_beat',
     'django_celery_results',
-    'drf_yasg',
 ]
 
 LOGIN_URL = '/admin/login/'

@@ -52,14 +52,17 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "corsheaders",
     'rest_framework',
+    'rest_framework.authtoken',
     # 'django_admin_commands',
     'import_export',
     'reunite',
     'constance.backends.database',
     'django_celery_beat',
     'django_celery_results',
-    # 'drf_yasg',
+    'drf_yasg',
 ]
+
+LOGIN_URL = '/admin/login/'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -74,6 +77,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'atfalsite.urls'
+CORS_ORIGIN_ALLOW_ALL = True
 
 TEMPLATES = [
     {
@@ -131,13 +135,36 @@ REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
+        'rest_framework.permissions.IsAuthenticated',
     ],
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.BasicAuthentication',
+    # Parser classes priority-wise for Swagger
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
+        'rest_framework.parsers.JSONParser',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-    ]
+    )
 }
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'JSON_EDITOR': True,
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': '<hr/>'
+                           'Enter the word <tt>Token</tt> followed by space then your apiKey <br/><br/> '
+                           '<b>Example:</b> <pre>Token f4bff35e0f6427860ae31bde0b5f2352cbf73d80</pre>'
+                           '<hr/><br/>'
+        }
+    },
+}
+# f4bff35e0f6427860ae31bde0b5f2352cbf73d80
 
 # Fine-tune later: https://pypi.org/project/django-cors-headers/
 CORS_ALLOW_ALL_ORIGINS = True

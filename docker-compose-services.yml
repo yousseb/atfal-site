@@ -44,6 +44,24 @@ services:
         depends_on:
           - redis
 
+    celery-web-worker:
+        image: atfal-site/atfal-web
+        pull_policy: always
+        build:
+          dockerfile: ./.docker/web/Dockerfile
+          context: .
+        container_name: celery-web-worker
+        restart: always
+        network_mode: "host"
+        entrypoint: /usr/local/bin/watchfiles --filter python '/usr/local/bin/celery -A atfalsite worker -l INFO -Q web'
+        volumes:
+          - /srv/atfal-site/:/app/
+        ports: []
+        depends_on:
+          - redis
+
+
+
 # docker-compose  -f docker-compose-services.yml build --no-cache
 # docker-compose  -f docker-compose-services.yml up -d
 # docker-compose  -f docker-compose-services.yml logs -f

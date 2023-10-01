@@ -21,9 +21,9 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
 app.conf.task_routes = task_routes = ([
-    ('reunite.tasks.apify_page_import_task.*', {'queue': 'feeds'}),
-    ('web.tasks.*', {'queue': 'web'}),      # Sample, unused
-    (re.compile(r'(video|image)\.tasks\..*'), {'queue': 'media'}),  # Sample, unused
+    ('reunite.tasks.apify_page_import_task.*', {'queue': 'feeds'}),  # Process facebook imports
+    ('reunite.tasks.clear_tokens.*', {'queue': 'web'}),              # Web related
+    (re.compile(r'(video|image)\.tasks\..*'), {'queue': 'media'}),   # Sample, unused
 ],)
 
 

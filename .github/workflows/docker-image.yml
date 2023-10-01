@@ -9,17 +9,44 @@ permissions:
   contents: read
 
 jobs:
-   build:
+   build-docker:
+     name: Build Docker Images
      strategy:
        matrix:
          label: [reunite, other]
      runs-on: [self-hosted, "${{ matrix.label }}"]
-
      steps:
      - uses: actions/checkout@v3
      - name: Build the Docker image
        run: |
-         docker compose -f docker-compose-services.yml -f docker-compose-web.yml build --no-cache
-         sudo /usr/local/bin/code_deploy.sh
-         
+         docker compose -f docker-compose-services.yml -f docker-compose-web.yml build --no-cache        
 
+   deploy-code:
+     name: Deploy Code
+     needs: build-docker
+     strategy:
+       matrix:
+         label: [reunite, other]
+     runs-on: [self-hosted, "${{ matrix.label }}"]
+     steps:
+     - name: Deploy Code
+       run: |
+         sudo /usr/local/bin/code_deploy.sh
+
+   restart-web:
+     name: Restart Web
+     needs: deploy-code
+     runs-on: [self-hosted, reunite]
+     steps:
+     - name: Restart Web
+       run: |
+         docker compose -f docker-compose-web.yml restart
+
+   restart-services:
+     name: Restart Services
+     needs: deploy-code
+     runs-on: [self-hosted, other]
+     steps:
+     - name: Restart Web
+       run: |
+         docker compose -f docker-compose-services.yml restart

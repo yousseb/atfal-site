@@ -20,6 +20,6 @@ jobs:
      - name: Build the Docker image
        run: |
          docker compose -f docker-compose-services.yml -f docker-compose-web.yml build --no-cache
-         /usr/local/bin/code_deploy.sh
+         sudo /usr/local/bin/code_deploy.sh
          
 

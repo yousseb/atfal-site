@@ -18,3 +18,6 @@ We rely on Oracle's free tier offering. The application uses
 5. We rely on Oracle's object storage (S3 bucket compatible) for image storage.
 
    
+## Debugging Live Servers
+1. For web `docker compose -f docker-compose-web.yml logs`
+2. For services `docker compose -f docker-compose-services.yml logs`

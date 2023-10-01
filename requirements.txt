@@ -3,7 +3,7 @@ django-environ~=0.10.0
 django-cors-headers==3.14.*
 djangorestframework==3.14.*
 #drf-yasg[validation]
-user_agents>=1.1.0
+user-agents~=2.2.0
 django-imagekit==4.1.*
 Pillow~=10.0.0
 #facebook-scraper

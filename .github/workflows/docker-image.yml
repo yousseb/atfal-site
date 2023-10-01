@@ -19,7 +19,7 @@ jobs:
      - uses: actions/checkout@v3
      - name: Build the Docker image
        run: |
-         docker compose -f docker-compose-services.yml -f docker-compose-web.yml build --no-cache        
+         docker compose -f docker-compose-services.yml -f docker-compose-web.yml build --no-cache
 
    deploy-code:
      name: Deploy Code
@@ -40,7 +40,8 @@ jobs:
      steps:
      - name: Restart Web
        run: |
-         docker compose -f docker-compose-web.yml restart
+         docker compose -f docker-compose-web.yml down
+         docker compose -f docker-compose-web.yml up -d
 
    restart-services:
      name: Restart Services
@@ -49,4 +50,5 @@ jobs:
      steps:
      - name: Restart Web
        run: |
-         docker compose -f docker-compose-services.yml restart
+         docker compose -f docker-compose-services.yml down
+         docker compose -f docker-compose-services.yml up -d

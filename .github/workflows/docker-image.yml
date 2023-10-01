@@ -40,6 +40,7 @@ jobs:
      steps:
      - name: Restart Web
        run: |
+         cd /srv/atfal-site
          docker compose -f docker-compose-web.yml down
          docker compose -f docker-compose-web.yml up -d --remove-orphans --wait --no-color --force-recreate
 
@@ -50,5 +51,6 @@ jobs:
      steps:
      - name: Restart Web
        run: |
+         cd /srv/atfal-site
          docker compose -f docker-compose-services.yml down
          docker compose -f docker-compose-services.yml up -d --remove-orphans --wait --no-color --force-recreate

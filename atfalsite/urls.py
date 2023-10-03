@@ -51,6 +51,7 @@ SchemaView = get_schema_view(
 def plain_view(request):
     pass
 
+
 urlpatterns = [
     path("i18n/", include("django.conf.urls.i18n")),
     re_path('flower/(?P<path>.*)', views.flower_app, name='flower'),

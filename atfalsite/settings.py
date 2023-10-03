@@ -210,14 +210,21 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 CONSTANCE_CONFIG = {
-    'APIFY_API_KEY': ('', _('APIFY API Key'), str),
+    'APIFY_API_KEY': ('', _('APIFY API key'), str),
+    'AI_API_KEY': ('', _('AI API key'), str),
+    'AI_SERVER_URL': ('', _('AI server url'), str),
 }
 CONSTANCE_IGNORE_ADMIN_VERSION_CHECK = True
 CONSTANCE_CONFIG_FIELDSETS = (
     (
-        _('General Options'),
+        _('Feeds'),
         {
             'fields': ('APIFY_API_KEY',),
+            'collapse': False,
+        },
+        _('AI Servers'),
+        {
+            'fields': ('AI_API_KEY', 'AI_SERVER_URL'),
             'collapse': False,
         },
     ),

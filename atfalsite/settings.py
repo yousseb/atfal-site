@@ -43,9 +43,7 @@ ALLOWED_HOSTS = ['*']
 INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'constance',
-    'jazzmin',
-    'django.contrib.admin',
-    'related_admin',
+    'constance.backends.database',
     'django.contrib.auth',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -57,9 +55,11 @@ INSTALLED_APPS = [
     # 'django_admin_commands',
     'import_export',
     'reunite',
-    'constance.backends.database',
     'django_celery_beat',
     'django_celery_results',
+    'jazzmin',
+    'django.contrib.admin',
+    'related_admin',
 ]
 
 LOGIN_URL = '/admin/login/'
@@ -87,6 +87,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'constance.context_processors.config',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
@@ -222,12 +223,14 @@ CONSTANCE_CONFIG_FIELDSETS = (
             'fields': ('APIFY_API_KEY',),
             'collapse': False,
         },
+    ),
+    (
         _('AI Servers'),
         {
             'fields': ('AI_API_KEY', 'AI_SERVER_URL'),
             'collapse': False,
         },
-    ),
+    )
 )
 CONSTANCE_DATABASE_PREFIX = 'constance:atfalsite:'
 #CONSTANCE_DATABASE_CACHE_BACKEND = 'default'

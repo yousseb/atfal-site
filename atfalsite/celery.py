@@ -23,6 +23,7 @@ app.autodiscover_tasks()
 app.conf.task_routes = task_routes = ([
     ('reunite.tasks.apify_page_import_task.*', {'queue': 'feeds'}),  # Process facebook imports
     ('reunite.tasks.clear_tokens.*', {'queue': 'web'}),              # Web related
+    ('reunite.tasks.detect_faceboxes_task.*', {'queue': 'ai'}),      # AI tasks
     (re.compile(r'(video|image)\.tasks\..*'), {'queue': 'media'}),   # Sample, unused
 ],)
 

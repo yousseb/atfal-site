@@ -137,7 +137,7 @@ class FacebookPhotoAdminForm(forms.ModelForm):
 @admin.register(FacebookPhoto)
 class FacebookPhotoAdmin(ImportExportModelAdmin):
     form = FacebookPhotoAdminForm
-    list_display = ['post', 'url', 'photo_preview']
+    list_display = ['post', 'url', 'photo_preview', 'face_boxes']
     list_per_page = 20
     search_fields = ['photo_image_url', 'url']
 

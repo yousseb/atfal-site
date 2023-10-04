@@ -138,6 +138,8 @@ class FacebookPhoto(models.Model):
     url = models.URLField(max_length=1024, help_text=_('Facebook photo URL'))
     media_id = models.CharField(max_length=200, null=True, help_text=_('Facebook media id (unique)'))
     ocr_text = models.CharField(max_length=1024, db_comment='OCR Text', null=True, help_text=_('OCR Text'))
+    face_boxes = models.CharField(max_length=8192, null=True, db_comment='Face Boxes',
+                                  help_text=_('Face boxes from ai output'))
 
     # Methods
     def get_absolute_url(self):

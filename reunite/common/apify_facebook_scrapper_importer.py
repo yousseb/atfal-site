@@ -4,7 +4,6 @@
 import logging as log
 import tempfile
 from pathlib import Path
-
 import ijson
 from constance import config
 from typing import Optional
@@ -15,6 +14,7 @@ from apify.log import ActorLogFormatter
 from reunite.common.apify_temp_table import add_temp_record, ApifyFacebookPost
 from reunite.models import FacebookPhoto, FacebookPost, Case
 from storages.backends.s3boto3 import S3Boto3Storage
+from .common_utils import download_file
 import requests
 
 log.basicConfig(format='[ %(levelname)s ] %(message)s', level=log.INFO, stream=sys.stdout)
@@ -38,17 +38,6 @@ class ApifyFacebookScrapperImporter:
         self.photos_imported = 0
         self.cases_imported = 0
         self.storage = S3Boto3Storage()
-
-    def download_file(self, url: str, path: Path) -> None:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.35 (KHTML, like Gecko) '
-                          'Chrome/39.0.2171.95 Safari/537.36'}
-        r = requests.get(url, headers=headers)
-        with open(path, 'wb') as f:
-            for chunk in r.iter_content(chunk_size=1024):
-                if chunk:  # filter out keep-alive new chunks
-                    f.write(chunk)
-        return
 
     @staticmethod
     def find_code(text: str) -> Optional[str]:
@@ -187,7 +176,7 @@ class ApifyFacebookScrapperImporter:
     def import_url(self, url: str):
         with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
             temp_file_name = tmp_file.name
-        self.download_file(url, Path(temp_file_name))
+        download_file(url, Path(temp_file_name))
         with open(temp_file_name, "rb") as f:
             for record in ijson.items(f, "item"):
                 add_temp_record(record)

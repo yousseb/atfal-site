@@ -2,3 +2,4 @@
 # -*- coding: utf-8 -*-
 
 from . import apify_page_import_task
+from . import detect_faceboxes_task

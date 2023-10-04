@@ -120,7 +120,7 @@ class FacebookPhotoAdminForm(forms.ModelForm):
 
     class Meta:
         model = FacebookPhoto
-        fields = ['post', 'url', 'media_id', 'ocr_text', 'file_name', 'preview']
+        fields = ['post', 'url', 'media_id', 'ocr_text', 'file_name', 'preview', 'face_boxes']
 
     def get_initial_for_field(self, field, field_name):
         if field_name == 'file_name':
@@ -131,13 +131,17 @@ class FacebookPhotoAdminForm(forms.ModelForm):
             if self.instance:
                 return self.instance.preview_url()
             return None
+        if field_name == 'formatted_faceboxes':
+            if self.instance:
+                return self.instance.formatted_faceboxes()
+            return None
         return super().get_initial_for_field(field, field_name)
 
 
 @admin.register(FacebookPhoto)
 class FacebookPhotoAdmin(ImportExportModelAdmin):
     form = FacebookPhotoAdminForm
-    list_display = ['post', 'url', 'photo_preview', 'face_boxes']
+    list_display = ['post', 'url', 'photo_preview', 'formatted_faceboxes']
     list_per_page = 20
     search_fields = ['photo_image_url', 'url']
 

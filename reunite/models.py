@@ -5,12 +5,17 @@ from django.db import models
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.html import format_html, escape
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from pathlib import Path
 from urllib.parse import urlparse, unquote, urlsplit
 from django.shortcuts import resolve_url
 from django.contrib.admin.templatetags.admin_urls import admin_urlname
 from storages.backends.s3boto3 import S3Boto3Storage
+from pygments import highlight, lexers, formatters
+import random
+import string
+import json
 
 storage = S3Boto3Storage()
 
@@ -67,7 +72,7 @@ class Case(models.Model):
                                       'text-align: right; white-space: normal;">') + post_text + '</div>'
             posts.append(post_text)
         joined = '<hr/>'.join(posts)
-        return format_html(f'{joined}')
+        return mark_safe(f'{joined}')
 
     posts_description.short_description = 'Description'
 
@@ -164,12 +169,72 @@ class FacebookPhoto(models.Model):
         file_path_within_bucket = f'original/{self.photo_file_name}'
         no_image_url = f'https://reunite-media.fra1.digitaloceanspaces.com/original/nophoto.jpg'
         url = get_signed_url(file_path_within_bucket)
-        return format_html(f'<img onerror="this.src=\'{no_image_url}\'" '
-                           f'src="{url}" '
-                           f'style="max-width: 100%;height: auto;" />')
+
+        letters = string.ascii_letters
+        random_string = ''.join(random.choice(letters) for i in range(10))
+
+        face_boxes = '[]'
+        if self.face_boxes is not None and self.face_boxes != '':
+            face_boxes = self.face_boxes
+
+        js = f'''
+              <script>
+                  var canvas_{random_string} = document.getElementById("canvas_{random_string}");
+                  var ctx_{random_string} = canvas_{random_string}.getContext("2d");
+                  ctx_{random_string}.lineWidth = 2;
+
+                  var img_{random_string} = new Image();
+                  img_{random_string}.onload = function () {{
+                    canvas_{random_string}.width = img_{random_string}.width;
+                    canvas_{random_string}.height = img_{random_string}.height;
+                    ctx_{random_string}.drawImage(img_{random_string}, 0, 0);
+
+                    var bounding_boxes_{random_string} = {face_boxes};
+                    ctx_{random_string}.globalAlpha = 0.8;
+                    ctx_{random_string}.strokeStyle = "yellow";
+
+                    if (Array.isArray(bounding_boxes_{random_string})) {{
+                        for (let i in bounding_boxes_{random_string}) {{
+                                bb = bounding_boxes_{random_string}[i];
+                                ctx_{random_string}.strokeRect(bb['x1'],
+                                                               bb['y1'],
+                                                               bb['x2'] - bb['x1'],
+                                                               bb['y2'] - bb['y1']);
+                            }}
+
+                    }}
+                  }}
+                  img_{random_string}.onerror = function() {{
+                    img_{random_string}.src='{no_image_url}'
+                  }}
+                  img_{random_string}.src = "{url}";
+              </script>
+            '''
+
+        return mark_safe(f'<canvas id="canvas_{random_string}" width=300 height=300'
+                         f'style="max-width: 100%;height: auto;" />'
+                         + js)
 
     photo_preview.short_description = _('Photo')
     photo_preview.allow_tags = True
+
+    def formatted_faceboxes(self):
+        if self.face_boxes is None or self.face_boxes == '':
+            return ''
+        colorful_json = self.face_boxes
+        style = ''
+        try:
+            j = json.loads(self.face_boxes)
+            formatted_json = json.dumps(j, sort_keys=True, indent=2)
+            formatter = formatters.HtmlFormatter(style='colorful')
+            colorful_json = highlight(formatted_json, lexers.JsonLexer(), formatter)
+            # Get the stylesheet
+            style = "<style>" + formatter.get_style_defs() + "</style><br>"
+        except:
+            pass
+        return mark_safe(str(style + colorful_json))
+    formatted_faceboxes.short_description = _('Faceboxes')
+    formatted_faceboxes.allow_tags = True
 
     def __str__(self):
         return "{}".format(self.media_id)

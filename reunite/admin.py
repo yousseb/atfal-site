@@ -5,7 +5,7 @@ from django.utils.safestring import mark_safe
 from import_export.admin import ImportExportModelAdmin
 from related_admin import RelatedFieldAdmin
 
-from .models import Case, FacebookPost, FacebookPhoto, CasePost
+from .models import Case, FacebookPost, FacebookPhoto, CasePost, EnhancedFace
 from django.utils.translation import gettext_lazy as _
 
 # Admin site customization
@@ -145,10 +145,27 @@ class FacebookPhotoAdmin(ImportExportModelAdmin):
     list_per_page = 20
     search_fields = ['photo_image_url', 'url']
 
-    # def has_change_permission(self, request, obj=None):
-    #     return False
+    def has_add_permission(self, request, obj=None):
+        return False
 
     formfield_overrides = {
         models.CharField: {'widget': forms.TextInput(attrs={'size': '60'})},
     }
     # https://stackoverflow.com/a/68850860
+
+
+@admin.register(EnhancedFace)
+class EnhancedFaceAdmin(ImportExportModelAdmin):
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    # def has_delete_permission(self, request, obj=None):
+    #     return False
+    # def has_change_permission(self, request, obj=None):
+    #     return False
+
+    list_per_page = 20
+    readonly_fields = ['file_name', 'original_face_box', 'facebook_photo']
+    list_display = ['file_name', 'facebook_photo', 'photo_preview']
+
+

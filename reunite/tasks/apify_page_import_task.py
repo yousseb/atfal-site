@@ -10,5 +10,5 @@ def import_page_task():
     try:
         ApifyFacebookScrapperImporter().import_page('https://www.facebook.com/atfalmafkoda')
         return True
-    except:
-        return False
+    except Exception as ex:
+        raise ex

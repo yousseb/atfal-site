@@ -17,7 +17,9 @@ from .common_utils import download_file
 
 log.basicConfig(format='[ %(levelname)s ] %(message)s', level=log.INFO, stream=sys.stdout)
 
-headers = {'content-type': 'application/json',
+headers = {'Content-Type': 'application/json',
+           'Accept-Encoding': 'gzip, deflate',
+           'Connection': 'close',
            'X-API-Key': config.AI_API_KEY}
 
 

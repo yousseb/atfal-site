@@ -230,11 +230,41 @@ class FacebookPhoto(models.Model):
             colorful_json = highlight(formatted_json, lexers.JsonLexer(), formatter)
             # Get the stylesheet
             style = "<style>" + formatter.get_style_defs() + "</style><br>"
-        except:
+        except Exception as _:
             pass
         return mark_safe(str(style + colorful_json))
+
     formatted_faceboxes.short_description = _('Faceboxes')
     formatted_faceboxes.allow_tags = True
 
     def __str__(self):
         return "{}".format(self.media_id)
+
+
+class EnhancedFace(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    facebook_photo = models.ForeignKey('FacebookPhoto', on_delete=models.CASCADE)
+    original_face_box = models.CharField(max_length=200, null=True, db_comment='Face bounding box in original photo',
+                                         help_text=_('Face bounding box in original photo'))
+    ignore_in_search = models.BooleanField(null=False, default=False,
+                                           db_comment='Ignore this enhanced face when doing searched',
+                                           help_text=_('Ignore this enhanced face when doing searched.'))
+    file_name = models.CharField(max_length=200, null=True, db_comment='File name in bucket',
+                                 help_text=_('File name in bucket'))
+
+    def signed_url(self):
+        file_path_within_bucket = f'enhanced/{self.file_name}'
+        url = get_signed_url(file_path_within_bucket)
+        return url
+
+    @cached_property
+    def photo_preview(self):
+        no_image_url = f'https://reunite-media.fra1.digitaloceanspaces.com/original/nophoto.jpg'
+        url = self.signed_url()
+        img_html = mark_safe(
+            f'<img onerror="this.src=\'{no_image_url}\'" src="{url}" '
+            f'style="display: inline; width: 200px; max-width: 400px; height: auto;"/>')
+        return format_html(f'{img_html}')
+
+    def __str__(self):
+        return "{}_{}".format(self.facebook_photo.id.__str__(), self.id.__str__())

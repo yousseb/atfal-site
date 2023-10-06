@@ -167,7 +167,8 @@ class ApifyFacebookScrapperImporter:
 
         # Fetch and print Actor results from the run's dataset (if there are any)
         for record in client.dataset(run["defaultDatasetId"]).iterate_items():
-            self.import_record(record)
+            add_temp_record(record)
+        self.import_temp_records()
 
         print(f'Posts: {self.posts_imported}')
         print(f'Photos: {self.photos_imported}')

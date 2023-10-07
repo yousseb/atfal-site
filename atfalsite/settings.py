@@ -10,8 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import environ
+from django import forms
+from django.forms import fields
 from pathlib import Path
-
 import pymemcache
 from django.utils.translation import gettext_lazy as _
 import os
@@ -42,8 +43,6 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.contenttypes',
-    'constance',
-    'constance.backends.database',
     'django.contrib.auth',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -58,6 +57,8 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'django_celery_results',
     'jazzmin',
+    'constance',
+    'constance.backends.database',
     'django.contrib.admin',
     'related_admin',
 ]
@@ -210,10 +211,17 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
+
+CONSTANCE_ADDITIONAL_FIELDS = {
+    'styled_str': ['django.forms.fields.CharField', {
+        'widget': 'django.forms.TextInput',
+        'widget_kwargs': {'attrs': {'class': 'vTextField', 'maxlength': '150'}}
+    }],
+}
 CONSTANCE_CONFIG = {
-    'APIFY_API_KEY': ('', _('APIFY API key'), str),
-    'AI_API_KEY': ('', _('AI API key'), str),
-    'AI_SERVER_URL': ('', _('AI server url'), str),
+    'APIFY_API_KEY': ('', _('APIFY API key'), 'styled_str'),
+    'AI_API_KEY': ('', _('AI API key'), 'styled_str'),
+    'AI_SERVER_URL': ('', _('AI server url'), 'styled_str'),
 }
 CONSTANCE_IGNORE_ADMIN_VERSION_CHECK = True
 CONSTANCE_CONFIG_FIELDSETS = (
@@ -233,7 +241,7 @@ CONSTANCE_CONFIG_FIELDSETS = (
     )
 )
 CONSTANCE_DATABASE_PREFIX = 'constance:atfalsite:'
-#CONSTANCE_DATABASE_CACHE_BACKEND = 'default'
+# CONSTANCE_DATABASE_CACHE_BACKEND = 'default'
 
 
 JAZZMIN_SETTINGS = {
@@ -427,7 +435,7 @@ JAZZMIN_UI_TWEAKS = {
 JAZZMIN_SETTINGS["show_ui_builder"] = False
 
 # Media storage configuration
-#STORAGES = {"default": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"}}
+# STORAGES = {"default": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"}}
 
 STORAGE_CONF = env.dict('STORAGE_CONF')
 AWS_S3_REGION_NAME = STORAGE_CONF['AWS_S3_REGION_NAME']
@@ -438,7 +446,7 @@ AWS_STORAGE_BUCKET_NAME = STORAGE_CONF['BUCKET_NAME']
 AWS_S3_ENDPOINT_URL = f'https://{NAMESPACE}.compat.objectstorage.{AWS_S3_REGION_NAME}.oraclecloud.com'
 AWS_ACCESS_KEY_ID = STORAGE_CONF['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = STORAGE_CONF['AWS_SECRET_ACCESS_KEY']
-#AWS_S3_VERIFY = False
+# AWS_S3_VERIFY = False
 
 # Celery & Celery Beat
 CELERY_RESULT_BACKEND = 'django-db'
@@ -452,4 +460,3 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
-

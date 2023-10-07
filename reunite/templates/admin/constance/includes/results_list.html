@@ -1,0 +1,66 @@
+{% load admin_list static i18n jazzmin %}
+<div class="card">
+    <div id="results" class="card-body table-responsive p-0">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th tabindex="0" rowspan="1" colspan="1"><div class="text"><span>{% trans "Name" %}</span></div></th>
+                    <th tabindex="0" rowspan="1" colspan="1"><div class="text"><span>{% trans "Default" %}</span></div></th>
+                    <th tabindex="0" rowspan="1" colspan="1"><div class="text"><span>{% trans "Value" %}</span></div></th>
+                    <th tabindex="0" rowspan="1" colspan="1" style="width: min-content"><div class="text"><span>{% trans "Modified" %}</span></div></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in config_values %}
+            <tr role="row" class="{% cycle 'even' 'odd' %}">
+                <th>
+                    <div class="row">
+                        <label class="col-sm text-left" id="{{ item.name|slugify }}">
+                        {{ item.name }}
+                        </label>
+                        <a class="item-anchor" href="#{{ item.name|slugify }}" title="Link to this setting">¶</a>
+                    </div>
+                </th>
+                <td>
+                    {{ item.default|linebreaks }}
+                </td>
+                <td>
+                    <div class="form-group field-{{ item.name|slugify }}">
+                        <div class=" col-sm-10 field-{{ item.name|slugify }}">
+                            {{ item.form_field.errors }}
+                            {% if item.is_file %}{% trans "Current file" %}: <a href="{% get_media_prefix as MEDIA_URL %}{{ MEDIA_URL }}{{ item.value }}" target="_blank">{{ item.value }}</a>{% endif %}
+                            {{ item.form_field }}
+                            <div class="help-block">{{ item.help_text|linebreaksbr }}</div>
+                            {% if not item.is_file %}
+                                <a href="#" class="reset-link small"
+                                    data-field-id="{{ item.form_field.auto_id }}"
+                                    data-field-type="{% spaceless %}
+                                    {% if item.is_checkbox %}checkbox
+                                    {% elif item.is_datetime %}datetime
+                                    {% elif item.is_date %}date
+                                    {% endif %}
+                                    {% endspaceless %}"
+                                    data-default="{% spaceless %}
+                                    {% if item.is_checkbox %}{% if item.raw_default %} true {% else %} false {% endif %}
+                                    {% elif item.is_date %}{{ item.raw_default|date:"U" }}
+                                    {% elif item.is_datetime %}{{ item.raw_default|date:"U" }}
+                                    {% else %}{{ item.default }}
+                                    {% endif %}
+                                    {% endspaceless %}">{% trans "Reset to default" %}</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </td>
+                <td style="width: min-content">
+                    {% if item.modified %}
+                        <img src="{% static 'admin/img/icon-yes.'|add:icon_type %}" alt="{{ item.modified }}" />
+                    {% else %}
+                        <img src="{% static 'admin/img/icon-no.'|add:icon_type %}" alt="{{ item.modified }}" />
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

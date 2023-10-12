@@ -5,7 +5,7 @@ from pathlib import Path
 import requests
 
 
-def download_file(self, url: str, path: Path) -> None:
+def download_file(url: str, path: Path) -> None:
     headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.35 (KHTML, like Gecko) '
                       'Chrome/39.0.2171.95 Safari/537.36'}

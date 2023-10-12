@@ -2,6 +2,7 @@ import uuid
 
 from cache_memoize import cache_memoize
 from django.db import models
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.html import format_html, escape
@@ -16,6 +17,7 @@ from pygments import highlight, lexers, formatters
 import random
 import string
 import json
+from django.contrib import admin
 
 storage = S3Boto3Storage()
 
@@ -59,7 +61,12 @@ class Case(models.Model):
 
     fb_posts.short_description = 'Posts'
 
+    @mark_safe
+    @admin.display(description='Case')
     def posts_description(self):
+        response = render_to_string('admin/reunite/case_result.html',
+                                    {'case': self,
+                                     'case_status_choices': Case.CaseStatus.choices})
         posts = []
         for post in self.posts.all():
             post_text = post.post_text.replace('\n', '<br/>')
@@ -71,14 +78,12 @@ class Case(models.Model):
             post_text = photo_html + ('<div style="width: 100%; direction: rtl; '
                                       'text-align: right; white-space: normal;">') + post_text + '</div>'
             posts.append(post_text)
-        joined = '<hr/>'.join(posts)
-        return mark_safe(f'{joined}')
-
-    posts_description.short_description = 'Description'
+        joined = response
+        return f'{joined}'
 
     @staticmethod
     def autocomplete_search_fields():
-        return ("case_code__iexact", "description__icontains",)
+        return "case_code__iexact", "description__icontains",
 
 
 class FacebookPost(models.Model):
@@ -100,6 +105,10 @@ class FacebookPost(models.Model):
     # # Metadata
     class Meta:
         ordering = ['-case_code']
+
+    def get_photos(self):
+        photos = FacebookPhoto.objects.filter(post=self)
+        return photos
 
     # Methods
     def get_absolute_url(self):
@@ -147,6 +156,10 @@ class FacebookPhoto(models.Model):
                                   help_text=_('Face boxes from ai output'))
 
     # Methods
+    def get_enhanced_faces(self):
+        faces = EnhancedFace.objects.filter(facebook_photo=self.id)
+        return faces
+
     def get_absolute_url(self):
         """Returns the URL to access a particular instance of MyModelName."""
         return reverse('model-detail-view', args=[str(self.id)])
@@ -165,6 +178,8 @@ class FacebookPhoto(models.Model):
         url = get_signed_url(file_path_within_bucket)
         return url
 
+    @admin.display(description=_('Photo'))
+    @mark_safe
     def photo_preview(self):
         file_path_within_bucket = f'original/{self.photo_file_name}'
         no_image_url = f'https://reunite-media.fra1.digitaloceanspaces.com/original/nophoto.jpg'
@@ -211,13 +226,10 @@ class FacebookPhoto(models.Model):
               </script>
             '''
 
-        return mark_safe(f'<canvas id="canvas_{random_string}" width=300 height=300'
-                         f'style="max-width: 100%;height: auto;" />'
-                         + js)
+        return f'<canvas id="canvas_{random_string}" style="max-width: 100%;height: auto;" />' + js
 
-    photo_preview.short_description = _('Photo')
-    photo_preview.allow_tags = True
-
+    @admin.display(description=_('Faceboxes'))
+    @mark_safe
     def formatted_faceboxes(self):
         if self.face_boxes is None or self.face_boxes == '':
             return ''
@@ -232,10 +244,7 @@ class FacebookPhoto(models.Model):
             style = "<style>" + formatter.get_style_defs() + "</style><br>"
         except Exception as _:
             pass
-        return mark_safe(str(style + colorful_json))
-
-    formatted_faceboxes.short_description = _('Faceboxes')
-    formatted_faceboxes.allow_tags = True
+        return str(style + colorful_json)
 
     def __str__(self):
         return "{}".format(self.media_id)
@@ -258,6 +267,7 @@ class EnhancedFace(models.Model):
         return url
 
     @cached_property
+    @mark_safe
     def photo_preview(self):
         no_image_url = f'https://reunite-media.fra1.digitaloceanspaces.com/original/nophoto.jpg'
         url = self.signed_url()

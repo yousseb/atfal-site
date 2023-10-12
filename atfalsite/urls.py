@@ -26,7 +26,7 @@ from drf_yasg import openapi
 from rest_framework import routers
 
 router = routers.DefaultRouter(trailing_slash=False)
-router.register('case-list', views.CaseViewSet)
+router.register('case-dataset', views.CaseViewSet)
 
 swagger_info = openapi.Info(
     title="Atfal-Site API",

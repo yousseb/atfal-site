@@ -9,3 +9,4 @@ class CaseViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Case.objects.all()
     serializer_class = CaseSerializer
+

@@ -1,0 +1,73 @@
+{#https://stackoverflow.com/a/2930241/4405028#}
+
+<div class="card" style="width: 20rem;">
+
+    {% for post in case.posts.all %}
+        {% for photo in post.get_photos %}
+            <div class="d-flex justify-content-center">
+                {{ photo.photo_preview }}
+            </div>
+        {% endfor %}
+        <div>
+            <a href="{% url 'admin:reunite_facebookpost_change' post.id %}" class="btn btn-link btn-sm">Posted {{ post.post_time }}</a>
+        </div>
+        <div class="card-body">
+            <p class="text-body text-right">
+                {{ post.post_text|linebreaksbr }}
+            </p>
+
+            <hr/>
+            Classification:
+            <div class="btn-group-justified" aria-label="Case Status" data-toggle="buttons">
+                {% for value, text in case_status_choices %}
+                        <div class="btn-group btn-group-toggle" role="group">
+                            {% if value == case.case_status %}
+                                <label class="btn btn-info btn-sm active">
+                                    <input type="radio" name="form-{{ forloop.counter }}-case_status" id="form-{{ forloop.counter }}-case_status" autocomplete="off" value="{{ value }}" checked> * {{ text }}
+                                </label>
+                            {% else %}
+                                <label class="btn btn-info btn-sm">
+                                    <input type="radio" name="form-{{ forloop.counter }}-case_status" id="form-{{ forloop.counter }}-case_status" value="{{ value }}" autocomplete="off"> {{ text }}
+                                </label>
+                            {% endif %}
+                        </div>
+                {% endfor %}
+            </div>
+
+        </div>
+    {% endfor %}
+
+{#{{ case.get_case_status_display }}#}
+
+
+{#                <option selected>Open this select menu</option>#}
+    {#            {% for course in courses %}#}
+{#                    <option value="{{case.status}}">{{ case.get_case_status_display }}</option>#}
+    {#            {% endfor %}#}
+{#            </select>#}
+
+<div class="container">
+  <div class="row">
+
+  </div>
+</div>
+
+
+    <div class="btn-group">
+        <a href="{% url 'admin:reunite_case_change' case.id %}" class="btn btn-outline-info btn-sm">Case: {{ case.case_code }}</a>
+    </div>
+
+</div>
+
+{#<i class="fas fa-sad-tear"></i>#}
+{# <i class="fas fa-user-check"></i> #}
+{#<i class="fas fa-question-circle"></i>#}
+{#<i class="fas fa-heart-broken"></i>#}
+
+{#                {% if forloop.counter|divisibleby:2 %}#}
+{#                    <div class="btn-group btn-group-toggle" role="group">#}
+{#                {% endif %}#}
+
+{#                {% if forloop.counter|divisibleby:3 %}#}
+{#                    </div>#}
+{#                {% endif %}#}

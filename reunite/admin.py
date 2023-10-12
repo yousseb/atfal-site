@@ -36,7 +36,7 @@ class CaseAdmin(ImportExportModelAdmin, RelatedFieldAdmin):
     form = CaseAdminForm
     model = Case
 
-    list_display = ['case_code', 'fb_posts', 'posts_description', 'case_status']
+    list_display = ['posts_description', 'case_status']
     list_editable = ['case_status']
     list_filter = ['case_status']
     search_fields = ['case_code', 'description']

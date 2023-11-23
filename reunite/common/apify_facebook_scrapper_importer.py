@@ -111,6 +111,8 @@ class ApifyFacebookScrapperImporter:
             for temp_photo in temp_post.photos:
                 photo = FacebookPhoto.objects.filter(photo_image_url=temp_photo.photo_image_url).first()
                 if photo is None:
+                    photo = FacebookPhoto.objects.filter(media_id=temp_photo.media_id).first()
+                if photo is None:
                     photo = FacebookPhoto()
                 photo.url = temp_photo.url
                 photo.ocr_text = temp_photo.ocr_text
